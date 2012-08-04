@@ -1,6 +1,5 @@
 SampleApp::Application.routes.draw do
-  
-  get "users/new"
+  resources :users #addst shit like users/new, users/1, users/1/edit, etc.
 
   root to:'static_pages#home'
 
