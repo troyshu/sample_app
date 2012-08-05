@@ -12,9 +12,12 @@ describe "Authentication" do
 		before {visit signin_path}
 
 		describe "with invalid information" do
-			before { click_button "Sign in" }
+			let(:user) { FactoryGirl.create(:user) }
+			before { click_button "Sign in" } #click the sign in button, don't input any info. simulates an invalid signin
 			it { should have_selector('title', text: 'Sign in')}
 			it { should have_error_message('Invalid') }
+			it { should_not have_link('Profile', href: user_path(user))}
+			it { should_not have_link('Settings', href: edit_user_path(user))}
 			describe "after visiting another page" do
 				before { click_link "Home"}
 				it {should_not have_selector('div.alert.alert-error')}
@@ -41,7 +44,21 @@ describe "Authentication" do
 	
 	describe "authorization" do
 
-		describe "as non-admin user" do
+		describe "as ADMIN user" do
+			let(:admin) { FactoryGirl.create(:admin) }
+			before do
+				sign_in admin
+			end
+
+			describe "submitting a DELETE request to delete himself" do
+	        	it "should NOT be able to delete himself" do
+		          expect { delete user_path(admin)}.not_to change(User, :count)
+		        end        
+	    	end
+	    	
+		end
+
+		describe "as successfully signed in non-admin user" do
 	      let(:user) { FactoryGirl.create(:user) }
 	      let(:non_admin) { FactoryGirl.create(:user) }
 
@@ -51,6 +68,12 @@ describe "Authentication" do
 	        before { delete user_path(user) }
 	        specify { response.should redirect_to(root_path) }        
 	      end
+
+	      describe "trying to get to the new user page" do
+			before { visit signup_path }
+			it { should_not have_selector('title', text: full_title('Sign up')) }
+	      end
+
 	    end
 
     
@@ -78,9 +101,7 @@ describe "Authentication" do
 	      describe "when attempting to visit a protected page" do
 	        before do
 	          visit edit_user_path(user)
-	          fill_in "Email",    with: user.email
-	          fill_in "Password", with: user.password
-	          click_button "Sign in"
+	          sign_in user
 	        end
 
 	        describe "after signing in" do
@@ -88,6 +109,18 @@ describe "Authentication" do
 	          it "should render the desired protected page" do
 	            page.should have_selector('title', text: 'Edit user')
 	          end
+
+	          describe "when signing in again" do
+	            before do
+	              visit signin_path
+	              sign_in user
+	            end
+
+	            it "should render the default (profile) page" do
+	              page.should have_selector('title', text: user.name) 
+	            end
+	          end
+
 	        end
 	      end
 	    end

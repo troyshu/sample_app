@@ -26,6 +26,15 @@ describe User do
 	
 	it { should_not be_admin }
 	it { should be_valid }
+	
+	#don't allow access to admin attribute (could be a security threat)
+	describe "accessible attributes" do
+		it "should not allow access to admin" do
+			expect do
+				User.new(admin: true)
+			end.should raise_error(ActiveModel::MassAssignmentSecurity::Error)
+		end
+	end
 
 	 describe "with admin attribute set to 'true'" do
 	    before do
