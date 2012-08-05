@@ -74,12 +74,30 @@ describe "Authentication" do
 			it { should_not have_selector('title', text: full_title('Sign up')) }
 	      end
 
+	      describe "trying to submit a POST to create a new user" do
+			before { post signup_path }
+			specify { response.should redirect_to(root_path) }
+	      end
+
 	    end
 
     
 
 	    describe "for non-signed-in users" do
 	      let(:user) { FactoryGirl.create(:user) }
+			
+			 describe "in the Microposts controller" do
+
+		        describe "submitting to the create action" do
+		          before { post microposts_path }
+		          specify { response.should redirect_to(signin_path) }
+		        end
+
+		        describe "submitting to the destroy action" do
+		          before { delete micropost_path(FactoryGirl.create(:micropost)) }
+		          specify { response.should redirect_to(signin_path) }
+		        end
+		      end
 
 	      describe "in the Users controller" do
 	        describe "visiting the edit page" do
